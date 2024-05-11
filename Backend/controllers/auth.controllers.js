@@ -43,12 +43,12 @@ export const signup = async (req, res) => {
 			// Generate JWT token here
 			generateTokenAndSetCookie(newUser._id, res);
 			await newUser.save();
-
 			let otp = otpGenerator.generate(6, {
 				upperCaseAlphabets: false,
 				lowerCaseAlphabets: false,
 				specialChars: false,
 			});
+		
 			let result = await OTP.findOne({ otp: otp });
 			while (result) {
 				otp = otpGenerator.generate(6, {
@@ -56,14 +56,16 @@ export const signup = async (req, res) => {
 				});
 				result = await OTP.findOne({ otp: otp });
 			}
-			const otpPayload = { email, otp };
+		
+			const otpPayload = { email, otp, user: newUser._id };
 			const otpBody = await OTP.create(otpPayload);
-
+		
 			res.status(200).json({
 				success: true,
 				message: 'OTP sent successfully',
 				otp,
 			});
+			
 		} else {
 			res.status(400).json({ error: 'Invalid user data' });
 		}
@@ -72,6 +74,32 @@ export const signup = async (req, res) => {
 		res.status(500).json({ error: 'Internal Server Error' });
 	}
 };
+export const verifyOTP=async(req,res)=>{
+
+	
+	const uOTP = req.body.otp;
+console.log(uOTP);
+
+if (uOTP) {
+    const otp = await OTP.findOne({ otp: uOTP });
+    console.log(otp);
+    if (otp) {
+        const user = await User.findById(otp.user);
+        if (user) {
+            user.status = 'verified';
+            await user.save();
+            await OTP.deleteMany({ user: user._id });
+            return res.status(200).json({ message: 'User verified successfully' });
+        } else {
+            return res.status(404).json({ error: 'User not found' });
+        }
+    } else {
+        return res.status(400).json({ error: 'Invalid OTP' });
+    }
+} else {
+    return res.status(400).json({ error: 'Invalid OTP' });
+}
+}
 
 export const login = async (req, res) => {
 	try {
@@ -94,6 +122,7 @@ export const login = async (req, res) => {
 			fullName: user.fullName,
 			username: user.username,
 			email: user.email,
+			status: user.status,
 		});
 	} catch (error) {
 		console.log('Error in login controller', error.message);
@@ -134,3 +163,4 @@ export const changePassword = async (req, res) => {
 		res.status(500).json({ error: 'Internal Server Error' });
 	}
 };
+

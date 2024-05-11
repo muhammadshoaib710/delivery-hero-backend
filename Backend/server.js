@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { urlencoded } from 'express';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import authRoutes from './routes/auth.routes.js';
@@ -13,6 +13,7 @@ dotenv.config();
 const PORT = process.env.PORT || 5000;
 
 app.use(express.json());
+//app.use(urlencoded({ extended: true }))
 app.use(
 	cors({
 		origin: ['http://localhost:3000'],

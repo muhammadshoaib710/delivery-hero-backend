@@ -48,6 +48,12 @@ const userSchema = new mongoose.Schema(
 			type: Boolean,
 			default: false,
 		},
+		status:{
+			type: String,
+			enum: ['verified', 'unverified'],
+			default: 'unverified',
+			required: true,
+		},
 	},
 	{ timestamps: true }
 );
